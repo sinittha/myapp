@@ -1,25 +1,15 @@
-
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "PC SHOP | Premium Technology Store",
-  description:
-    "ร้านค้าอุปกรณ์คอมพิวเตอร์และสินค้าไอที พร้อมราคาพิเศษสำหรับสมาชิก",
-  applicationName: "PC SHOP",
-  keywords: [
-    "PC SHOP",
-    "Gaming PC",
-    "Notebook",
-    "Computer",
-    "Technology",
-  ],
+  title: "PC SHOP | Premium Computer Store",
+  description: "ร้านจำหน่ายคอมพิวเตอร์และอุปกรณ์ไอที",
 };
 
 export const viewport: Viewport = {
+  themeColor: "#080a12",
   width: "device-width",
   initialScale: 1,
-  themeColor: "#080D19",
 };
 
 export default function RootLayout({
@@ -29,9 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th">
-      <body className="min-h-screen antialiased">
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
