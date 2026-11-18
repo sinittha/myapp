@@ -1,1031 +1,1074 @@
 
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-type Flight = {
+type Product = {
   id: number;
-  airline: string;
-  logo: string;
-  code: string;
-  departure: string;
-  arrival: string;
-  duration: string;
+  name: string;
+  category: string;
   price: number;
-  color: string;
+  oldPrice: number;
+  image: string;
+  description: string;
+  specs: string[];
+  badge?: string;
 };
 
-const flights: Flight[] = [
-  { id: 1, airline: "การบินไทย", logo: "✈️", code: "TG104", departure: "07:20", arrival: "09:10", duration: "1 ชม. 50 นาที", price: 1299, color: "purple" },
-  { id: 2, airline: "AirAsia", logo: "A", code: "FD3437", departure: "09:30", arrival: "11:20", duration: "1 ชม. 50 นาที", price: 1399, color: "red" },
-  { id: 3, airline: "Bangkok Airways", logo: "🛫", code: "PG215", departure: "12:15", arrival: "14:05", duration: "1 ชม. 50 นาที", price: 1699, color: "blue" },
-  { id: 4, airline: "Thai Lion Air", logo: "🦁", code: "SL510", departure: "15:40", arrival: "17:30", duration: "1 ชม. 50 นาที", price: 1499, color: "orange" },
-  { id: 5, airline: "Nok Air", logo: "🐦", code: "DD122", departure: "18:20", arrival: "20:10", duration: "1 ชม. 50 นาที", price: 1599, color: "yellow" },
+type User = {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+};
+
+type CartItem = {
+  productId: number;
+  quantity: number;
+};
+
+const products: Product[] = [
+  {
+    id: 1,
+    name: "ASUS Vivobook 15",
+    category: "โน้ตบุ๊ก",
+    price: 15990,
+    oldPrice: 17990,
+    image:
+      "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=700",
+    description: "โน้ตบุ๊กดีไซน์สวย เหมาะสำหรับเรียนและทำงาน",
+    specs: ["Intel Core i5", "RAM 8GB", "SSD 512GB", "จอ 15.6 นิ้ว Full HD"],
+    badge: "ขายดี",
+  },
+  {
+    id: 2,
+    name: "Lenovo LOQ 15",
+    category: "โน้ตบุ๊ก",
+    price: 24990,
+    oldPrice: 27990,
+    image:
+      "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=700",
+    description: "โน้ตบุ๊กสำหรับเล่นเกมและงานกราฟิก",
+    specs: ["Intel Core i7", "RAM 16GB", "SSD 1TB", "NVIDIA Graphics"],
+    badge: "ยอดนิยม",
+  },
+  {
+    id: 3,
+    name: "Acer Aspire 3",
+    category: "โน้ตบุ๊ก",
+    price: 12990,
+    oldPrice: 14990,
+    image:
+      "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=700",
+    description: "โน้ตบุ๊กสำหรับการเรียนและใช้งานทั่วไป",
+    specs: ["Intel Core i5", "RAM 8GB", "SSD 512GB", "จอ 15.6 นิ้ว"],
+  },
+  {
+    id: 4,
+    name: "MSI Thin GF63",
+    category: "โน้ตบุ๊ก",
+    price: 18990,
+    oldPrice: 21990,
+    image:
+      "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=700",
+    description: "โน้ตบุ๊กเกมมิ่งประสิทธิภาพสูง",
+    specs: ["Intel Core i5", "RAM 8GB", "SSD 512GB", "Gaming Laptop"],
+  },
+  {
+    id: 5,
+    name: "PC Gaming RGB",
+    category: "คอมพิวเตอร์",
+    price: 22990,
+    oldPrice: 25990,
+    image:
+      "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=700",
+    description: "คอมพิวเตอร์ตั้งโต๊ะสำหรับเล่นเกม",
+    specs: ["Intel Core i5", "RAM 16GB", "SSD 1TB", "RGB Case"],
+    badge: "ขายดี",
+  },
+  {
+    id: 6,
+    name: "AOC Monitor 24",
+    category: "จอคอม",
+    price: 4990,
+    oldPrice: 5990,
+    image:
+      "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=700",
+    description: "จอภาพคมชัด เหมาะกับการทำงาน",
+    specs: ["24 นิ้ว", "Full HD", "IPS Panel", "75Hz"],
+  },
+  {
+    id: 7,
+    name: "Mechanical Keyboard",
+    category: "คีย์บอร์ด",
+    price: 1290,
+    oldPrice: 1590,
+    image:
+      "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=700",
+    description: "คีย์บอร์ด Mechanical พร้อมไฟ RGB",
+    specs: ["Mechanical Switch", "RGB Lighting", "USB", "Anti-Ghosting"],
+  },
+  {
+    id: 8,
+    name: "Gaming Headset",
+    category: "หูฟัง",
+    price: 990,
+    oldPrice: 1290,
+    image:
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=700",
+    description: "หูฟังเสียงคมชัด พร้อมไมโครโฟน",
+    specs: ["Stereo Sound", "Microphone", "Comfort Fit", "USB"],
+  },
+  {
+    id: 9,
+    name: "Wireless Gaming Mouse",
+    category: "เมาส์",
+    price: 790,
+    oldPrice: 990,
+    image:
+      "https://images.unsplash.com/photo-1527814050087-3793815479db?w=700",
+    description: "เมาส์ไร้สายสำหรับการทำงานและเล่นเกม",
+    specs: ["Wireless", "DPI Adjustable", "Rechargeable", "Ergonomic"],
+  },
 ];
 
-const provinces = [
-  "กรุงเทพฯ (BKK)",
-  "เชียงใหม่ (CNX)",
-  "ภูเก็ต (HKT)",
-  "เชียงราย (CEI)",
-  "ขอนแก่น (KKC)",
-  "หาดใหญ่ (HDY)",
-  "กระบี่ (KBV)",
-  "อุดรธานี (UTH)",
+const categories = [
+  { name: "โน้ตบุ๊ก", icon: "💻" },
+  { name: "คอมพิวเตอร์", icon: "🖥️" },
+  { name: "จอคอม", icon: "🖥" },
+  { name: "คีย์บอร์ด", icon: "⌨️" },
+  { name: "หูฟัง", icon: "🎧" },
+  { name: "เมาส์", icon: "🖱️" },
 ];
 
-export default function Home() {
+const money = (n: number) =>
+  "฿" + n.toLocaleString("th-TH");
+
+export default function Page() {
+  const [started, setStarted] = useState(false);
+  const [exited, setExited] = useState(false);
   const [page, setPage] = useState("home");
-  const [trip, setTrip] = useState("oneway");
-  const [from, setFrom] = useState("กรุงเทพฯ (BKK)");
-  const [to, setTo] = useState("เชียงใหม่ (CNX)");
-  const [date, setDate] = useState("2026-11-20");
-  const [returnDate, setReturnDate] = useState("2026-11-25");
-  const [passengers, setPassengers] = useState(1);
-  const [seat, setSeat] = useState("ชั้นประหยัด");
-  const [selected, setSelected] = useState<Flight | null>(null);
-  const [payment, setPayment] = useState("card");
-  const [filter, setFilter] = useState("ทั้งหมด");
-  const [sort, setSort] = useState("ราคาถูกที่สุด");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showSignup, setShowSignup] = useState(false);
-  const [showEdit, setShowEdit] = useState(false);
-  const [showFilter, setShowFilter] = useState(false);
-  const [searchDone, setSearchDone] = useState(false);
-  const [bookingDone, setBookingDone] = useState(false);
-
-  const [user, setUser] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-  });
-
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-  });
-
+  const [selected, setSelected] = useState<Product | null>(null);
+  const [category, setCategory] = useState("ทั้งหมด");
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("default");
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [favorites, setFavorites] = useState<number[]>([]);
-  const [bookings, setBookings] = useState<Flight[]>([]);
-  const [registered, setRegistered] = useState(false);
+  const [user, setUser] = useState<User>({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+  });
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [password, setPassword] = useState("");
+  const [orders, setOrders] = useState<any[]>([]);
+  const [editing, setEditing] = useState(false);
+  const [payment, setPayment] = useState("โอนเงินผ่านธนาคาร");
+  const [notice, setNotice] = useState("");
 
+  // โหลดข้อมูลที่บันทึกไว้
   useEffect(() => {
-    const savedFavorites = localStorage.getItem("skyfly-favorites");
-    const savedBookings = localStorage.getItem("skyfly-bookings");
-    const savedUser = localStorage.getItem("skyfly-user");
-
-    if (savedFavorites) setFavorites(JSON.parse(savedFavorites));
-    if (savedBookings) setBookings(JSON.parse(savedBookings));
-    if (savedUser) {
-      const parsed = JSON.parse(savedUser);
-      setUser(parsed);
-      setForm({
-        name: parsed.name,
-        email: parsed.email,
-        phone: parsed.phone,
-      });
-      setRegistered(true);
+    try {
+      const saved = localStorage.getItem("pcshop-data");
+      if (saved) {
+        const data = JSON.parse(saved);
+        setCart(data.cart || []);
+        setFavorites(data.favorites || []);
+        setUser(data.user || {
+          name: "", email: "", phone: "", address: ""
+        });
+        setOrders(data.orders || []);
+        setLoggedIn(data.loggedIn || false);
+      }
+    } catch {
+      console.log("ไม่สามารถโหลดข้อมูลได้");
     }
   }, []);
 
-  const saveFavorites = (data: number[]) => {
-    setFavorites(data);
-    localStorage.setItem("skyfly-favorites", JSON.stringify(data));
-  };
-
-  const toggleFavorite = (id: number) => {
-    const next = favorites.includes(id)
-      ? favorites.filter((x) => x !== id)
-      : [...favorites, id];
-    saveFavorites(next);
-  };
-
-  const filteredFlights = flights
-    .filter((f) =>
-      filter === "ทั้งหมด" ? true : f.airline === filter
-    )
-    .sort((a, b) =>
-      sort === "ราคาถูกที่สุด"
-        ? a.price - b.price
-        : b.price - a.price
+  // บันทึกข้อมูลอัตโนมัติ
+  useEffect(() => {
+    if (!started) return;
+    localStorage.setItem(
+      "pcshop-data",
+      JSON.stringify({
+        cart,
+        favorites,
+        user,
+        orders,
+        loggedIn,
+      })
     );
+  }, [started, cart, favorites, user, orders, loggedIn]);
 
-  const searchFlights = () => {
-    if (from === to) {
-      alert("กรุณาเลือกสนามบินต้นทางและปลายทางให้แตกต่างกัน");
+  const cartCount = cart.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
+
+  const total = cart.reduce((sum, item) => {
+    const product = products.find(
+      (p) => p.id === item.productId
+    );
+    return sum + (product?.price || 0) * item.quantity;
+  }, 0);
+
+  const filteredProducts = useMemo(() => {
+    let result = products.filter((p) => {
+      const matchCategory =
+        category === "ทั้งหมด" || p.category === category;
+      const matchSearch = p.name
+        .toLowerCase()
+        .includes(search.toLowerCase());
+      return matchCategory && matchSearch;
+    });
+
+    if (sort === "low") result.sort((a, b) => a.price - b.price);
+    if (sort === "high") result.sort((a, b) => b.price - a.price);
+
+    return result;
+  }, [category, search, sort]);
+
+  function go(name: string) {
+    setPage(name);
+    setMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function addCart(id: number) {
+    setCart((old) => {
+      const found = old.find((item) => item.productId === id);
+      if (found) {
+        return old.map((item) =>
+          item.productId === id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      }
+      return [...old, { productId: id, quantity: 1 }];
+    });
+    setNotice("เพิ่มสินค้าลงตะกร้าแล้ว");
+    setTimeout(() => setNotice(""), 1800);
+  }
+
+  function changeQty(id: number, amount: number) {
+    setCart((old) =>
+      old
+        .map((item) =>
+          item.productId === id
+            ? { ...item, quantity: item.quantity + amount }
+            : item
+        )
+        .filter((item) => item.quantity > 0)
+    );
+  }
+
+  function removeCart(id: number) {
+    setCart((old) => old.filter((item) => item.productId !== id));
+  }
+
+  function toggleFavorite(id: number) {
+    setFavorites((old) =>
+      old.includes(id)
+        ? old.filter((x) => x !== id)
+        : [...old, id]
+    );
+  }
+
+  function openProduct(product: Product) {
+    setSelected(product);
+    go("detail");
+  }
+
+  function submitAuth(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    if (!user.email || !password) {
+      setNotice("กรุณากรอกข้อมูลให้ครบ");
       return;
     }
-    setSearchDone(true);
-    setPage("results");
-    setBookingDone(false);
-  };
 
-  const swapLocations = () => {
-    setFrom(to);
-    setTo(from);
-  };
-
-  const register = () => {
-    if (!form.name || !form.email || !user.password) {
-      alert("กรุณากรอกชื่อ อีเมล และรหัสผ่านให้ครบ");
+    if (authMode === "register" && !user.name) {
+      setNotice("กรุณากรอกชื่อสมาชิก");
       return;
     }
 
-    const newUser = {
-      ...form,
-      password: user.password,
+    setLoggedIn(true);
+    setNotice(
+      authMode === "register"
+        ? "สมัครสมาชิกสำเร็จ!"
+        : "เข้าสู่ระบบสำเร็จ!"
+    );
+    setTimeout(() => {
+      setNotice("");
+      go("profile");
+    }, 900);
+  }
+
+  function checkout() {
+    if (!loggedIn) {
+      setNotice("กรุณาเข้าสู่ระบบก่อนสั่งซื้อ");
+      go("auth");
+      return;
+    }
+
+    if (cart.length === 0) return;
+
+    const order = {
+      id: "PC" + Date.now().toString().slice(-7),
+      date: new Date().toLocaleDateString("th-TH"),
+      items: [...cart],
+      total,
+      payment,
+      status: "รอการชำระเงิน",
     };
 
-    setUser(newUser);
-    localStorage.setItem("skyfly-user", JSON.stringify(newUser));
-    setRegistered(true);
-    setShowSignup(false);
-    alert("สมัครสมาชิกสำเร็จ ยินดีต้อนรับสู่ SkyFly!");
-  };
+    setOrders((old) => [order, ...old]);
+    setCart([]);
+    setNotice("สั่งซื้อสำเร็จแล้ว!");
+    go("orders");
+    setTimeout(() => setNotice(""), 2500);
+  }
 
-  const updateProfile = () => {
-    const updated = { ...user, ...form };
-    setUser(updated);
-    localStorage.setItem("skyfly-user", JSON.stringify(updated));
-    setShowEdit(false);
-    alert("บันทึกข้อมูลเรียบร้อยแล้ว");
-  };
+  const inputClass =
+    "w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-100";
 
-  const confirmBooking = () => {
-    if (!selected) return;
+  const categoriesUI = (
+    <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+      {categories.map((item) => (
+        <button
+          key={item.name}
+          onClick={() => {
+            setCategory(item.name);
+            go("products");
+          }}
+          className="rounded-2xl border border-gray-100 bg-white p-3 text-center shadow-sm hover:-translate-y-1 hover:border-yellow-400 transition"
+        >
+          <div className="text-3xl mb-2">{item.icon}</div>
+          <div className="text-xs font-bold">{item.name}</div>
+        </button>
+      ))}
+    </div>
+  );
 
-    const updated = [selected, ...bookings];
-    setBookings(updated);
-    localStorage.setItem("skyfly-bookings", JSON.stringify(updated));
-    setBookingDone(true);
-    setPage("success");
-  };
-
-  const money = (n: number) =>
-    n.toLocaleString("th-TH");
-
-  const navItems = [
-    { id: "home", icon: "⌂", label: "หน้าแรก" },
-    { id: "results", icon: "✈", label: "จองเที่ยวบิน" },
-    { id: "favorites", icon: "♡", label: "รายการโปรด" },
-    { id: "bookings", icon: "▤", label: "การจองของฉัน" },
-    { id: "profile", icon: "♙", label: "บัญชีของฉัน" },
-  ];
-
-  const goTo = (p: string) => {
-    setPage(p);
-    setMenuOpen(false);
-  };
-
-  return (
-    <main className="min-h-screen bg-[#f5f6fa] text-slate-800">
-
-      {/* TOP NAVIGATION */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-5 h-[76px] flex items-center justify-between">
-
-          <button onClick={() => goTo("home")} className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-red-500 to-red-700 text-white flex items-center justify-center text-2xl shadow-lg shadow-red-200">
-              ✈
-            </div>
-            <div className="text-left">
-              <h1 className="text-2xl font-black tracking-tight text-red-600">
-                SkyFly
-              </h1>
-              <p className="text-[10px] text-gray-400">
-                บินง่าย ไปได้ทุกที่
-              </p>
-            </div>
+  function productCard(product: Product) {
+    return (
+      <div
+        key={product.id}
+        className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm hover:shadow-lg transition"
+      >
+        <div className="relative bg-gray-50 p-3">
+          {product.badge && (
+            <span className="absolute left-3 top-3 z-10 rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white">
+              {product.badge}
+            </span>
+          )}
+          <button
+            onClick={() => toggleFavorite(product.id)}
+            className="absolute right-3 top-3 z-10 text-xl"
+          >
+            {favorites.includes(product.id) ? "❤️" : "♡"}
           </button>
-
-          <nav className="hidden md:flex items-center gap-7">
-            {navItems.slice(0, 4).map((item) => (
-              <button
-                key={item.id}
-                onClick={() => goTo(item.id)}
-                className={`text-sm font-semibold transition ${
-                  page === item.id
-                    ? "text-red-600"
-                    : "text-gray-500 hover:text-red-500"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-3">
-            {registered ? (
-              <button
-                onClick={() => goTo("profile")}
-                className="flex items-center gap-2 bg-red-50 rounded-full px-3 py-2 text-red-600 font-bold text-sm"
-              >
-                <span className="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center">
-                  {user.name.charAt(0)}
-                </span>
-                <span className="hidden sm:block">{user.name}</span>
-              </button>
-            ) : (
-              <button
-                onClick={() => setShowSignup(true)}
-                className="bg-red-600 hover:bg-red-700 text-white rounded-full px-5 py-2.5 text-sm font-bold shadow-lg shadow-red-200 transition"
-              >
-                สมัครสมาชิก
-              </button>
-            )}
-
+          <button
+            onClick={() => openProduct(product)}
+            className="w-full"
+          >
+            <img
+              src={product.image}
+              alt={product.name}
+              className="h-36 w-full object-contain mix-blend-multiply transition group-hover:scale-105"
+            />
+          </button>
+        </div>
+        <div className="p-3">
+          <button
+            onClick={() => openProduct(product)}
+            className="text-left font-bold text-sm hover:text-yellow-600"
+          >
+            {product.name}
+          </button>
+          <p className="mt-1 text-xs text-gray-500">
+            {product.specs.slice(0, 2).join(" | ")}
+          </p>
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <div>
+              <div className="font-black text-red-600">
+                {money(product.price)}
+              </div>
+              <div className="text-xs text-gray-400 line-through">
+                {money(product.oldPrice)}
+              </div>
+            </div>
             <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden text-2xl p-2"
+              onClick={() => addCart(product.id)}
+              className="rounded-full bg-yellow-400 px-3 py-2 text-xs font-bold hover:bg-yellow-500 active:scale-95 transition"
             >
-              ☰
+              🛒 ใส่ตะกร้า
             </button>
           </div>
         </div>
+      </div>
+    );
+  }
 
-        {menuOpen && (
-          <div className="md:hidden bg-white border-t p-4 space-y-2 shadow-xl">
-            {navItems.map((item) => (
+  // หน้าแรกก่อนเปิดแอป
+  if (!started) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-yellow-100 via-white to-amber-200 p-5">
+        <div className="w-full max-w-sm overflow-hidden rounded-[35px] border border-white bg-white shadow-2xl">
+          <div className="relative overflow-hidden bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-500 px-7 py-14 text-center">
+            <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/20" />
+            <div className="absolute -bottom-16 -left-12 h-48 w-48 rounded-full bg-white/20" />
+            <div className="relative">
+              <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl border border-white/60 bg-white shadow-xl">
+                <span className="text-6xl">💻</span>
+              </div>
+              <h1 className="mt-6 text-4xl font-black tracking-tight text-gray-900">
+                PC Shop
+              </h1>
+              <p className="mt-2 font-medium text-gray-800">
+                ครบเครื่องเรื่องคอมพิวเตอร์
+              </p>
+              <div className="mx-auto mt-6 h-1 w-16 rounded-full bg-gray-900/30" />
+              <p className="mt-5 text-sm text-gray-800">
+                เลือกซื้อสินค้าไอทีคุณภาพดี
+                <br />
+                ในราคาที่คุณประทับใจ
+              </p>
+            </div>
+          </div>
+          <div className="space-y-3 p-7">
+            <button
+              onClick={() => {
+                setStarted(true);
+                setExited(false);
+                go("home");
+              }}
+              className="w-full rounded-2xl bg-yellow-400 py-4 text-lg font-black text-gray-900 shadow-lg shadow-yellow-200 hover:bg-yellow-500 active:scale-95 transition"
+            >
+              🚀 เปิดแอป
+            </button>
+            <button
+              onClick={() => setExited(true)}
+              className="w-full rounded-2xl border border-gray-200 py-3 font-bold text-gray-500 hover:bg-gray-50"
+            >
+              ยกเลิก / ออกจากแอป
+            </button>
+            <p className="pt-2 text-center text-xs text-gray-400">
+              PC SHOP APPLICATION • VERSION 1.0
+            </p>
+          </div>
+        </div>
+        {exited && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-5">
+            <div className="w-full max-w-sm rounded-3xl bg-white p-7 text-center shadow-2xl">
+              <div className="text-5xl">👋</div>
+              <h2 className="mt-4 text-xl font-black">ออกจากแอปแล้ว</h2>
+              <p className="mt-2 text-sm text-gray-500">
+                คุณสามารถกลับมาเปิดใช้งาน PC Shop ได้อีกครั้ง
+              </p>
               <button
-                key={item.id}
-                onClick={() => goTo(item.id)}
-                className="w-full text-left p-3 rounded-xl hover:bg-red-50"
+                onClick={() => setExited(false)}
+                className="mt-6 w-full rounded-xl bg-yellow-400 py-3 font-bold"
               >
-                {item.icon}　{item.label}
+                กลับไปหน้าเปิดแอป
               </button>
-            ))}
+            </div>
           </div>
         )}
+      </main>
+    );
+  }
+
+  if (exited) return null;
+
+  return (
+    <main className="min-h-screen bg-[#f7f7f5] pb-24 text-gray-900">
+      {/* HEADER */}
+      <header className="sticky top-0 z-40 border-b border-yellow-100 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setMenuOpen(true)}
+              className="rounded-xl p-2 text-2xl hover:bg-yellow-50"
+            >
+              ☰
+            </button>
+            <button
+              onClick={() => go("home")}
+              className="flex items-center gap-2 text-left"
+            >
+              <span className="text-3xl">💻</span>
+              <span>
+                <span className="block text-xl font-black">
+                  PC Shop
+                </span>
+                <span className="block text-[10px] text-gray-500">
+                  ครบเครื่องเรื่องคอมพิวเตอร์
+                </span>
+              </span>
+            </button>
+          </div>
+          <button
+            onClick={() => go("cart")}
+            className="relative rounded-xl p-2 text-2xl hover:bg-yellow-50"
+          >
+            🛒
+            {cartCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white">
+                {cartCount}
+              </span>
+            )}
+          </button>
+        </div>
       </header>
 
-      {/* MAIN CONTENT */}
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-7">
+      {/* SIDE MENU */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40">
+          <div className="h-full w-[290px] max-w-[85%] overflow-y-auto bg-white p-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b pb-5">
+              <div className="text-xl font-black">💻 PC Shop</div>
+              <button onClick={() => setMenuOpen(false)} className="text-2xl">×</button>
+            </div>
+            <div className="my-5 rounded-2xl bg-yellow-100 p-4">
+              <div className="text-3xl">👤</div>
+              <p className="mt-2 font-bold">
+                {loggedIn ? user.name : "ยินดีต้อนรับ"}
+              </p>
+              <p className="text-xs text-gray-500">
+                {loggedIn ? user.email : "เข้าสู่ระบบเพื่อใช้งาน"}
+              </p>
+            </div>
+            {[
+              ["home", "🏠", "หน้าหลัก"],
+              ["products", "🛍️", "สินค้าทั้งหมด"],
+              ["favorites", "❤️", "รายการโปรด"],
+              ["cart", "🛒", "ตะกร้าสินค้า"],
+              ["orders", "📦", "ประวัติการสั่งซื้อ"],
+              ["profile", "👤", "บัญชีของฉัน"],
+              ["auth", "🔐", loggedIn ? "บัญชีสมาชิก" : "เข้าสู่ระบบ / สมัครสมาชิก"],
+            ].map(([key, icon, label]) => (
+              <button
+                key={key}
+                onClick={() => go(key)}
+                className="mb-1 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold hover:bg-yellow-100"
+              >
+                <span className="text-xl">{icon}</span>
+                {label}
+              </button>
+            ))}
+            <button
+              onClick={() => {
+                setStarted(false);
+                setPage("home");
+                setMenuOpen(false);
+              }}
+              className="mt-5 w-full rounded-xl border border-red-200 p-3 text-sm font-bold text-red-500"
+            >
+              ออกจากแอป
+            </button>
+          </div>
+        </div>
+      )}
 
-        {/* HOME PAGE */}
+      {/* MAIN CONTENT */}
+      <div className="mx-auto max-w-7xl px-4 py-5">
+        {/* HOME */}
         {page === "home" && (
           <div className="space-y-8">
-
-            <section className="relative min-h-[390px] md:min-h-[450px] rounded-[32px] overflow-hidden bg-gradient-to-r from-[#160e26] via-[#8c182a] to-[#ed2637]">
-              <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_75%_30%,white,transparent_35%)]" />
-              <div className="absolute right-[-5%] top-[-10%] text-[220px] md:text-[350px] opacity-20 rotate-[-15deg]">
-                ✈
-              </div>
-
-              <div className="relative z-10 p-7 md:p-16 max-w-2xl text-white">
-                <span className="inline-block bg-white/15 px-4 py-2 rounded-full text-xs font-bold mb-5 backdrop-blur">
-                  ✦ SPECIAL FLIGHT DEALS
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-gray-950 via-gray-800 to-yellow-700 p-7 text-white shadow-xl sm:p-12">
+              <div className="relative z-10 max-w-lg">
+                <span className="rounded-full bg-yellow-400 px-3 py-1 text-xs font-black text-black">
+                  SPECIAL PROMOTION
                 </span>
-                <h2 className="text-4xl md:text-6xl font-black leading-tight">
-                  ออกเดินทาง
+                <h1 className="mt-5 text-3xl font-black leading-tight sm:text-5xl">
+                  คอมพิวเตอร์
                   <br />
-                  ไปกับเรา
-                </h2>
-                <p className="mt-4 text-white/80 text-sm md:text-lg">
-                  ค้นหาเที่ยวบินราคาดีที่สุด พร้อมประสบการณ์การเดินทางที่สะดวกสบาย
+                  ประสิทธิภาพสูง
+                </h1>
+                <p className="mt-3 text-sm text-gray-200">
+                  สินค้าไอทีคุณภาพดี ราคาสุดคุ้มสำหรับคุณ
                 </p>
-                <div className="mt-7 flex flex-wrap gap-3">
-                  <span className="bg-white/15 rounded-xl px-4 py-3 text-sm">✈ เที่ยวบินราคาพิเศษ</span>
-                  <span className="bg-white/15 rounded-xl px-4 py-3 text-sm">♡ จองง่ายในไม่กี่ขั้นตอน</span>
-                </div>
-              </div>
-            </section>
-
-            {/* SEARCH FORM */}
-            <section className="bg-white rounded-[28px] p-5 md:p-8 shadow-xl shadow-slate-200/60 -mt-20 relative z-20 max-w-6xl mx-auto">
-
-              <div className="flex flex-wrap gap-3 mb-7">
                 <button
-                  onClick={() => setTrip("oneway")}
-                  className={`rounded-full px-6 py-2.5 font-bold text-sm ${
-                    trip === "oneway" ? "bg-red-600 text-white" : "bg-gray-100 text-gray-500"
-                  }`}
+                  onClick={() => {
+                    setCategory("ทั้งหมด");
+                    go("products");
+                  }}
+                  className="mt-6 rounded-full bg-yellow-400 px-6 py-3 font-black text-black shadow-lg hover:bg-yellow-300"
                 >
-                  ✈ เที่ยวเดียว
-                </button>
-                <button
-                  onClick={() => setTrip("round")}
-                  className={`rounded-full px-6 py-2.5 font-bold text-sm ${
-                    trip === "round" ? "bg-red-600 text-white" : "bg-gray-100 text-gray-500"
-                  }`}
-                >
-                  ⇄ ไป-กลับ
+                  ช้อปเลย →
                 </button>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-[1fr_50px_1fr_1fr_1fr] gap-3 items-end">
-
-                <div>
-                  <label className="text-xs text-gray-400 font-bold mb-2 block">จาก (ต้นทาง)</label>
-                  <select
-                    value={from}
-                    onChange={(e) => setFrom(e.target.value)}
-                    className="w-full border border-gray-200 rounded-2xl p-4 font-bold bg-gray-50 outline-none focus:border-red-500"
-                  >
-                    {provinces.map((p) => <option key={p}>{p}</option>)}
-                  </select>
-                </div>
-
-                <button
-                  onClick={swapLocations}
-                  className="h-[54px] rounded-2xl bg-red-50 text-red-600 text-xl hover:bg-red-100"
-                  title="สลับสนามบิน"
-                >
-                  ⇄
-                </button>
-
-                <div>
-                  <label className="text-xs text-gray-400 font-bold mb-2 block">ไปยัง (ปลายทาง)</label>
-                  <select
-                    value={to}
-                    onChange={(e) => setTo(e.target.value)}
-                    className="w-full border border-gray-200 rounded-2xl p-4 font-bold bg-gray-50 outline-none focus:border-red-500"
-                  >
-                    {provinces.map((p) => <option key={p}>{p}</option>)}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs text-gray-400 font-bold mb-2 block">วันเดินทาง</label>
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="w-full border border-gray-200 rounded-2xl p-4 bg-gray-50 outline-none focus:border-red-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs text-gray-400 font-bold mb-2 block">ผู้โดยสาร</label>
-                  <div className="flex items-center justify-between border border-gray-200 rounded-2xl p-3 bg-gray-50">
-                    <button
-                      onClick={() => setPassengers(Math.max(1, passengers - 1))}
-                      className="w-8 h-8 rounded-lg bg-white shadow text-red-600"
-                    >−</button>
-                    <span className="font-bold">{passengers} คน</span>
-                    <button
-                      onClick={() => setPassengers(Math.min(9, passengers + 1))}
-                      className="w-8 h-8 rounded-lg bg-white shadow text-red-600"
-                    >+</button>
-                  </div>
-                </div>
-              </div>
-
-              {trip === "round" && (
-                <div className="mt-4 max-w-xs">
-                  <label className="text-xs text-gray-400 font-bold mb-2 block">วันเดินทางกลับ</label>
-                  <input
-                    type="date"
-                    min={date}
-                    value={returnDate}
-                    onChange={(e) => setReturnDate(e.target.value)}
-                    className="w-full border border-gray-200 rounded-2xl p-4 bg-gray-50"
-                  />
-                </div>
-              )}
-
-              <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-                <select
-                  value={seat}
-                  onChange={(e) => setSeat(e.target.value)}
-                  className="border border-gray-200 rounded-xl px-4 py-3 text-sm bg-white"
-                >
-                  <option>ชั้นประหยัด</option>
-                  <option>ชั้นธุรกิจ</option>
-                  <option>ชั้นหนึ่ง</option>
-                </select>
-
-                <button
-                  onClick={searchFlights}
-                  className="w-full sm:w-auto px-12 py-4 rounded-2xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-black shadow-lg shadow-red-200 transition"
-                >
-                  🔍 ค้นหาเที่ยวบิน
-                </button>
-              </div>
-            </section>
-
-            {/* PROMOTION */}
-            <section>
-              <div className="flex justify-between items-center mb-5">
-                <div>
-                  <h3 className="text-2xl font-black">โปรโมชั่นแนะนำ</h3>
-                  <p className="text-sm text-gray-400 mt-1">จุดหมายปลายทางยอดนิยม</p>
-                </div>
-                <button onClick={() => goTo("results")} className="text-red-600 text-sm font-bold">
-                  ดูเที่ยวบินทั้งหมด →
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {[
-                  { name: "เชียงใหม่", code: "CNX", price: "1,299", emoji: "🏔️", desc: "สัมผัสธรรมชาติและวัฒนธรรม" },
-                  { name: "ภูเก็ต", code: "HKT", price: "1,599", emoji: "🏝️", desc: "เที่ยวทะเล พักผ่อนสบาย" },
-                  { name: "เชียงราย", code: "CEI", price: "1,499", emoji: "⛰️", desc: "ชมวิวภูเขาและวัดสวย" },
-                ].map((p) => (
-                  <div key={p.code} className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition group">
-                    <div className="h-36 bg-gradient-to-br from-red-100 to-orange-100 flex items-center justify-center text-7xl group-hover:scale-105 transition">
-                      {p.emoji}
-                    </div>
-                    <div className="p-5">
-                      <div className="flex justify-between items-center">
-                        <h4 className="font-black text-xl">{p.name}</h4>
-                        <span className="text-xs bg-red-50 text-red-600 rounded-full px-3 py-1">{p.code}</span>
-                      </div>
-                      <p className="text-gray-400 text-sm mt-2">{p.desc}</p>
-                      <div className="flex justify-between items-center mt-5">
-                        <p className="text-sm">เริ่มต้น <b className="text-red-600 text-xl">{p.price}</b> บาท</p>
-                        <button
-                          onClick={() => {
-                            setTo(p.name + " (" + p.code + ")");
-                            goTo("home");
-                            window.scrollTo({ top: 0, behavior: "smooth" });
-                          }}
-                          className="bg-red-600 text-white px-4 py-2 rounded-xl text-sm font-bold"
-                        >
-                          จองเลย
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-          </div>
-        )}
-
-        {/* RESULTS PAGE */}
-        {page === "results" && (
-          <div className="space-y-6">
-
-            <div className="bg-gradient-to-r from-red-600 to-red-800 text-white p-7 rounded-[28px]">
-              <button onClick={() => goTo("home")} className="text-white/70 text-sm mb-5">
-                ← กลับหน้าค้นหา
-              </button>
-              <h2 className="text-3xl font-black">ผลการค้นหาเที่ยวบิน</h2>
-              <p className="mt-2 text-white/80">
-                {from}　→　{to}
-              </p>
-              <p className="text-sm text-white/70 mt-1">
-                {date} · ผู้โดยสาร {passengers} คน · {seat}
-              </p>
+              <img
+                src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=900"
+                alt="Laptop promotion"
+                className="absolute bottom-0 right-0 h-40 w-1/2 object-contain sm:h-64"
+              />
             </div>
 
-            <div className="flex flex-wrap gap-3 justify-between items-center">
-              <p className="font-bold text-lg">เที่ยวบินที่พบ {filteredFlights.length} รายการ</p>
-              <div className="flex flex-wrap gap-2">
-                <select
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value)}
-                  className="bg-white border rounded-xl px-4 py-3 text-sm"
-                >
-                  <option>ราคาถูกที่สุด</option>
-                  <option>ราคาแพงที่สุด</option>
-                </select>
-                <button
-                  onClick={() => setShowFilter(!showFilter)}
-                  className="bg-white border rounded-xl px-4 py-3 text-sm font-bold"
-                >
-                  ⚙ ตัวกรอง
-                </button>
-              </div>
-            </div>
-
-            {showFilter && (
-              <div className="bg-white rounded-2xl p-5 flex flex-wrap gap-3">
-                {["ทั้งหมด", ...flights.map((f) => f.airline)].map((name) => (
-                  <button
-                    key={name}
-                    onClick={() => setFilter(name)}
-                    className={`px-4 py-2 rounded-full text-sm font-bold ${
-                      filter === name ? "bg-red-600 text-white" : "bg-gray-100 text-gray-600"
-                    }`}
-                  >
-                    {name}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div className="space-y-4">
-              {filteredFlights.map((f) => (
-                <div key={f.id} className="bg-white rounded-3xl p-5 md:p-6 shadow-sm hover:shadow-lg transition">
-                  <div className="flex flex-col md:flex-row items-center gap-5">
-                    <div className="flex items-center gap-3 w-full md:w-48">
-                      <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-2xl">
-                        {f.logo}
-                      </div>
-                      <div>
-                        <p className="font-black text-sm">{f.airline}</p>
-                        <p className="text-xs text-gray-400">{f.code}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex-1 flex items-center justify-center gap-5 w-full">
-                      <div className="text-center">
-                        <p className="text-2xl font-black">{f.departure}</p>
-                        <p className="text-sm text-gray-400">BKK</p>
-                      </div>
-                      <div className="flex-1 max-w-40 text-center">
-                        <p className="text-xs text-gray-400 mb-2">{f.duration}</p>
-                        <div className="flex items-center gap-2">
-                          <div className="h-px bg-red-300 flex-1" />
-                          <span className="text-red-600">✈</span>
-                          <div className="h-px bg-red-300 flex-1" />
-                        </div>
-                        <p className="text-xs text-gray-400 mt-2">บินตรง</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-2xl font-black">{f.arrival}</p>
-                        <p className="text-sm text-gray-400">CNX</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between md:justify-end gap-5 w-full md:w-auto">
-                      <div>
-                        <p className="text-xs text-gray-400">ราคาเริ่มต้น</p>
-                        <p className="text-2xl font-black text-red-600">{money(f.price)} ฿</p>
-                      </div>
-
-                      <button
-                        onClick={() => toggleFavorite(f.id)}
-                        className={`text-2xl ${favorites.includes(f.id) ? "text-red-600" : "text-gray-300"}`}
-                        title="บันทึกรายการโปรด"
-                      >
-                        ♥
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setSelected(f);
-                          setPage("detail");
-                        }}
-                        className="bg-red-600 hover:bg-red-700 text-white rounded-xl px-5 py-3 font-bold text-sm"
-                      >
-                        เลือกเที่ยวบิน →
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {filteredFlights.length === 0 && (
-              <div className="bg-white p-12 text-center rounded-3xl text-gray-400">
-                ไม่พบเที่ยวบินที่ตรงกับตัวกรอง
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* FLIGHT DETAIL */}
-        {page === "detail" && selected && (
-          <div className="max-w-3xl mx-auto space-y-6">
-            <button onClick={() => goTo("results")} className="text-gray-500 font-bold">
-              ← กลับผลการค้นหา
-            </button>
-
-            <div className="bg-gradient-to-r from-red-600 to-red-800 text-white p-8 rounded-[28px]">
-              <p className="text-white/70 text-sm">FLIGHT DETAILS</p>
-              <h2 className="text-3xl font-black mt-2">รายละเอียดเที่ยวบิน</h2>
-              <p className="mt-2">{from} → {to}</p>
-            </div>
-
-            <div className="bg-white p-7 rounded-3xl shadow-sm">
-              <div className="flex gap-4 items-center border-b pb-6">
-                <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center text-3xl">
-                  {selected.logo}
-                </div>
-                <div>
-                  <h3 className="text-xl font-black">{selected.airline}</h3>
-                  <p className="text-gray-400">{selected.code}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 items-center text-center py-9">
-                <div>
-                  <p className="text-4xl font-black">{selected.departure}</p>
-                  <p className="font-bold mt-2">BKK</p>
-                  <p className="text-xs text-gray-400">กรุงเทพฯ</p>
-                </div>
-                <div>
-                  <p className="text-red-600 text-3xl">✈</p>
-                  <div className="h-px bg-red-200 my-2" />
-                  <p className="text-xs text-gray-400">{selected.duration}</p>
-                </div>
-                <div>
-                  <p className="text-4xl font-black">{selected.arrival}</p>
-                  <p className="font-bold mt-2">CNX</p>
-                  <p className="text-xs text-gray-400">เชียงใหม่</p>
-                </div>
-              </div>
-
-              <div className="border-t pt-5 space-y-4">
-                <h4 className="font-black">รายละเอียดการเดินทาง</h4>
-                <div className="flex justify-between text-sm">
-                  <span>✈ ประเภทที่นั่ง</span>
-                  <b>{seat}</b>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>▣ สัมภาระ</span>
-                  <b>20 กก.</b>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>♙ ผู้โดยสาร</span>
-                  <b>{passengers} คน</b>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>☑ บริการอาหาร</span>
-                  <b>มีบริการ</b>
-                </div>
-              </div>
-
-              <div className="bg-red-50 rounded-2xl p-5 mt-6 flex justify-between items-center">
-                <span className="font-bold">ราคารวมโดยประมาณ</span>
-                <span className="text-2xl font-black text-red-600">
-                  {money(selected.price * passengers)} บาท
-                </span>
-              </div>
-
-              <button
-                onClick={() => {
-                  if (!registered) {
-                    setShowSignup(true);
-                    return;
-                  }
-                  setPage("checkout");
-                }}
-                className="w-full bg-red-600 hover:bg-red-700 text-white rounded-2xl py-4 mt-6 font-black"
-              >
-                ดำเนินการจองเที่ยวบิน →
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* CHECKOUT */}
-        {page === "checkout" && selected && (
-          <div className="max-w-3xl mx-auto space-y-6">
-            <button onClick={() => goTo("detail")} className="text-gray-500 font-bold">
-              ← กลับ
-            </button>
-            <h2 className="text-3xl font-black">ยืนยันการจอง</h2>
-
-            <div className="bg-white rounded-3xl p-6 shadow-sm">
-              <h3 className="font-black text-lg mb-5">✈ ข้อมูลการเดินทาง</h3>
-              <div className="bg-red-50 rounded-2xl p-5">
-                <p className="font-black">{from} → {to}</p>
-                <p className="text-sm text-gray-500 mt-2">{date}</p>
-                <p className="mt-3 font-bold">{selected.airline} ({selected.code})</p>
-                <p className="text-sm mt-1">{selected.departure} → {selected.arrival}</p>
-                <p className="text-sm mt-1">ผู้โดยสาร {passengers} คน</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-3xl p-6 shadow-sm">
-              <h3 className="font-black text-lg mb-5">♙ ข้อมูลผู้โดยสาร</h3>
-              <div className="space-y-3">
-                <p>ชื่อ-นามสกุล: <b>{user.name}</b></p>
-                <p>อีเมล: <b>{user.email}</b></p>
-                <p>เบอร์โทรศัพท์: <b>{user.phone}</b></p>
+            <div>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-xl font-black">หมวดหมู่สินค้า</h2>
                 <button onClick={() => {
-                  setForm({ name: user.name, email: user.email, phone: user.phone });
-                  setShowEdit(true);
-                }} className="text-red-600 text-sm font-bold">
-                  ✎ แก้ไขข้อมูลผู้โดยสาร
+                  setCategory("ทั้งหมด");
+                  go("products");
+                }} className="text-sm font-bold text-yellow-700">
+                  ดูทั้งหมด →
                 </button>
+              </div>
+              {categoriesUI}
+            </div>
+
+            <div>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-xl font-black">🔥 สินค้าขายดี</h2>
+                <button
+                  onClick={() => {
+                    setCategory("ทั้งหมด");
+                    go("products");
+                  }}
+                  className="text-sm font-bold text-yellow-700"
+                >
+                  ดูทั้งหมด →
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                {products.filter(p => p.badge).map(productCard)}
               </div>
             </div>
 
-            <div className="bg-white rounded-3xl p-6 shadow-sm">
-              <h3 className="font-black text-lg mb-5">▣ ช่องทางการชำระเงิน</h3>
-              {[
-                { id: "card", label: "บัตรเครดิต / เดบิต", icon: "💳" },
-                { id: "bank", label: "โอนเงินผ่านธนาคาร", icon: "🏦" },
-                { id: "promptpay", label: "พร้อมเพย์", icon: "📱" },
-              ].map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPayment(p.id)}
-                  className={`w-full p-4 mb-3 rounded-xl border flex items-center gap-4 ${
-                    payment === p.id ? "border-red-500 bg-red-50" : "border-gray-100"
-                  }`}
-                >
-                  <span className="text-2xl">{p.icon}</span>
-                  <span className="font-bold text-sm">{p.label}</span>
-                  <span className="ml-auto text-red-600">{payment === p.id ? "●" : "○"}</span>
-                </button>
-              ))}
+            <div>
+              <h2 className="mb-4 text-xl font-black">✨ สินค้าแนะนำ</h2>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                {products.slice(2, 6).map(productCard)}
+              </div>
             </div>
-
-            <div className="bg-white rounded-3xl p-6 shadow-sm flex justify-between items-center">
-              <span className="font-bold">ยอดรวมทั้งหมด</span>
-              <span className="text-3xl font-black text-red-600">
-                {money(selected.price * passengers)} บาท
-              </span>
-            </div>
-
-            <button
-              onClick={confirmBooking}
-              className="w-full py-5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-2xl font-black text-lg shadow-lg shadow-red-200"
-            >
-              ยืนยันการจอง ✓
-            </button>
-            <p className="text-center text-xs text-gray-400">
-              * ระบบนี้เป็น Prototype สำหรับทดลองการใช้งาน ไม่ได้ตัดเงินจริง
-            </p>
           </div>
         )}
 
-        {/* SUCCESS PAGE */}
-        {page === "success" && (
-          <div className="max-w-xl mx-auto bg-white rounded-[32px] p-8 md:p-12 text-center shadow-xl">
-            <div className="w-24 h-24 mx-auto rounded-full bg-green-100 flex items-center justify-center text-5xl text-green-600">
-              ✓
+        {/* PRODUCTS */}
+        {page === "products" && (
+          <div className="space-y-5">
+            <h1 className="text-2xl font-black">สินค้าทั้งหมด</h1>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="🔍 ค้นหาสินค้า เช่น โน้ตบุ๊ก..."
+              className={inputClass}
+            />
+            <div className="flex flex-wrap gap-2">
+              {["ทั้งหมด", ...categories.map(c => c.name)].map(c => (
+                <button
+                  key={c}
+                  onClick={() => setCategory(c)}
+                  className={`rounded-full px-4 py-2 text-xs font-bold ${
+                    category === c
+                      ? "bg-yellow-400 text-black"
+                      : "border bg-white text-gray-600"
+                  }`}
+                >
+                  {c}
+                </button>
+              ))}
             </div>
-            <h2 className="text-3xl font-black mt-6">จองเที่ยวบินสำเร็จ!</h2>
-            <p className="text-gray-400 mt-3">
-              ขอบคุณที่เลือกใช้บริการ SkyFly
-            </p>
-            <div className="bg-gray-50 rounded-2xl p-5 mt-7 text-left">
-              <p className="text-xs text-gray-400">BOOKING REFERENCE</p>
-              <p className="text-2xl font-black text-red-600 mt-1">
-                SF{Date.now().toString().slice(-8)}
-              </p>
-              <p className="mt-4 text-sm">ผู้จอง: {user.name}</p>
-              <p className="text-sm mt-2">สายการบิน: {selected?.airline}</p>
-              <p className="text-sm mt-2">เที่ยวบิน: {selected?.code}</p>
-              <p className="text-sm mt-2">ยอดชำระ: {selected ? money(selected.price * passengers) : 0} บาท</p>
-              <p className="text-xs text-gray-400 mt-3">
-                สถานะ: บันทึกการจองในระบบทดลองแล้ว
-              </p>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-500">
+                พบสินค้า {filteredProducts.length} รายการ
+              </span>
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value)}
+                className="rounded-xl border bg-white px-3 py-2 text-sm"
+              >
+                <option value="default">เรียงตามปกติ</option>
+                <option value="low">ราคาต่ำไปสูง</option>
+                <option value="high">ราคาสูงไปต่ำ</option>
+              </select>
             </div>
-            <button onClick={() => goTo("bookings")} className="w-full bg-red-600 text-white py-4 rounded-2xl font-bold mt-7">
-              ดูรายการจองของฉัน
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {filteredProducts.map(productCard)}
+            </div>
+            {filteredProducts.length === 0 && (
+              <div className="rounded-2xl bg-white p-10 text-center text-gray-500">
+                ไม่พบสินค้าที่ค้นหา
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* PRODUCT DETAIL */}
+        {page === "detail" && selected && (
+          <div>
+            <button onClick={() => go("products")} className="mb-5 font-bold">
+              ← กลับไปหน้าสินค้า
             </button>
-            <button onClick={() => goTo("home")} className="mt-4 text-gray-400 text-sm">
-              กลับหน้าหลัก
-            </button>
+            <div className="grid gap-7 rounded-3xl bg-white p-5 shadow-sm md:grid-cols-2 md:p-8">
+              <div className="flex items-center justify-center rounded-2xl bg-gray-50 p-5">
+                <img
+                  src={selected.image}
+                  alt={selected.name}
+                  className="h-72 w-full object-contain"
+                />
+              </div>
+              <div>
+                <span className="text-sm font-bold text-yellow-700">
+                  {selected.category}
+                </span>
+                <h1 className="mt-2 text-3xl font-black">
+                  {selected.name}
+                </h1>
+                <div className="mt-3 text-sm text-yellow-500">★★★★★ <span className="text-gray-500">4.8 (125 รีวิว)</span></div>
+                <p className="mt-4 text-sm text-gray-500">
+                  {selected.description}
+                </p>
+                <div className="mt-5 text-3xl font-black text-red-600">
+                  {money(selected.price)}
+                </div>
+                <p className="text-sm text-gray-400 line-through">
+                  {money(selected.oldPrice)}
+                </p>
+                <hr className="my-5" />
+                <h3 className="font-black">รายละเอียดและสเปกสินค้า</h3>
+                <div className="mt-3 space-y-3">
+                  {selected.specs.map((spec) => (
+                    <div key={spec} className="flex gap-2 text-sm">
+                      <span className="text-yellow-500">✓</span>
+                      {spec}
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-7 flex flex-wrap gap-3">
+                  <button
+                    onClick={() => toggleFavorite(selected.id)}
+                    className="rounded-xl border px-5 py-3 font-bold"
+                  >
+                    {favorites.includes(selected.id) ? "❤️ ถูกใจแล้ว" : "♡ รายการโปรด"}
+                  </button>
+                  <button
+                    onClick={() => addCart(selected.id)}
+                    className="flex-1 rounded-xl bg-yellow-400 px-5 py-3 font-black hover:bg-yellow-500"
+                  >
+                    🛒 เพิ่มลงตะกร้า
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CART */}
+        {page === "cart" && (
+          <div>
+            <h1 className="mb-5 text-2xl font-black">🛒 ตะกร้าสินค้า</h1>
+            {cart.length === 0 ? (
+              <div className="rounded-3xl bg-white p-12 text-center shadow-sm">
+                <div className="text-6xl">🛒</div>
+                <h2 className="mt-4 text-xl font-black">ยังไม่มีสินค้าในตะกร้า</h2>
+                <p className="mt-2 text-sm text-gray-500">เลือกสินค้าที่คุณต้องการได้เลย</p>
+                <button onClick={() => go("products")} className="mt-5 rounded-xl bg-yellow-400 px-7 py-3 font-bold">
+                  เลือกซื้อสินค้า
+                </button>
+              </div>
+            ) : (
+              <div className="grid gap-5 lg:grid-cols-3">
+                <div className="space-y-3 lg:col-span-2">
+                  {cart.map(item => {
+                    const product = products.find(p => p.id === item.productId)!;
+                    return (
+                      <div key={item.productId} className="flex flex-wrap items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
+                        <img src={product.image} alt={product.name} className="h-20 w-24 rounded-xl bg-gray-50 object-contain" />
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-bold">{product.name}</h3>
+                          <p className="mt-1 font-black text-red-600">{money(product.price)}</p>
+                          <div className="mt-2 flex items-center gap-3">
+                            <button onClick={() => changeQty(product.id, -1)} className="h-8 w-8 rounded-lg bg-gray-100">−</button>
+                            <span className="font-bold">{item.quantity}</span>
+                            <button onClick={() => changeQty(product.id, 1)} className="h-8 w-8 rounded-lg bg-yellow-100">+</button>
+                          </div>
+                        </div>
+                        <button onClick={() => removeCart(product.id)} className="text-xl text-red-500">🗑️</button>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="h-fit rounded-2xl bg-white p-5 shadow-sm">
+                  <h2 className="text-lg font-black">สรุปคำสั่งซื้อ</h2>
+                  <div className="mt-5 flex justify-between text-sm">
+                    <span>ยอดรวมสินค้า</span>
+                    <span>{money(total)}</span>
+                  </div>
+                  <div className="mt-3 flex justify-between text-sm">
+                    <span>ค่าจัดส่ง</span>
+                    <span className="font-bold text-green-600">ฟรี</span>
+                  </div>
+                  <hr className="my-4" />
+                  <div className="flex justify-between text-lg font-black">
+                    <span>ยอดสุทธิ</span>
+                    <span className="text-red-600">{money(total)}</span>
+                  </div>
+                  <button onClick={() => go("checkout")} className="mt-6 w-full rounded-xl bg-yellow-400 py-4 font-black hover:bg-yellow-500">
+                    ดำเนินการชำระเงิน →
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {/* FAVORITES */}
         {page === "favorites" && (
           <div>
-            <h2 className="text-3xl font-black mb-2">♡ รายการโปรด</h2>
-            <p className="text-gray-400 mb-7">เที่ยวบินที่คุณบันทึกไว้</p>
-            {flights.filter((f) => favorites.includes(f.id)).length === 0 ? (
-              <div className="bg-white rounded-3xl p-12 text-center">
-                <p className="text-5xl">♡</p>
-                <p className="font-bold mt-4">ยังไม่มีเที่ยวบินที่บันทึกไว้</p>
-                <button onClick={() => goTo("results")} className="mt-5 text-red-600 font-bold">
-                  ค้นหาเที่ยวบิน →
-                </button>
+            <h1 className="mb-5 text-2xl font-black">❤️ รายการโปรด</h1>
+            {favorites.length === 0 ? (
+              <div className="rounded-2xl bg-white p-12 text-center text-gray-500">
+                ยังไม่มีสินค้าที่ถูกใจ
               </div>
             ) : (
-              <div className="space-y-4">
-                {flights.filter((f) => favorites.includes(f.id)).map((f) => (
-                  <div key={f.id} className="bg-white rounded-2xl p-5 flex justify-between items-center">
-                    <div>
-                      <b>{f.airline}</b>
-                      <p className="text-sm text-gray-400">{f.departure} → {f.arrival}</p>
-                      <p className="text-red-600 font-black mt-1">{money(f.price)} บาท</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button onClick={() => {
-                        setSelected(f);
-                        setPage("detail");
-                      }} className="bg-red-600 text-white px-4 py-2 rounded-xl text-sm">
-                        ดูรายละเอียด
-                      </button>
-                      <button onClick={() => toggleFavorite(f.id)} className="text-red-500 text-xl">♥</button>
-                    </div>
-                  </div>
-                ))}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                {products.filter(p => favorites.includes(p.id)).map(productCard)}
               </div>
             )}
           </div>
         )}
 
-        {/* BOOKINGS */}
-        {page === "bookings" && (
-          <div>
-            <h2 className="text-3xl font-black mb-2">▤ การจองของฉัน</h2>
-            <p className="text-gray-400 mb-7">ประวัติเที่ยวบินที่คุณเลือกจอง</p>
-            {bookings.length === 0 ? (
-              <div className="bg-white rounded-3xl p-12 text-center">
-                <p className="text-5xl">✈</p>
-                <p className="font-bold mt-4">ยังไม่มีประวัติการจอง</p>
-                <button onClick={() => goTo("home")} className="mt-5 text-red-600 font-bold">
-                  เริ่มค้นหาเที่ยวบิน →
-                </button>
+        {/* AUTH */}
+        {page === "auth" && (
+          <div className="mx-auto max-w-md rounded-3xl bg-white p-6 shadow-lg sm:p-9">
+            {loggedIn ? (
+              <div className="text-center">
+                <div className="text-6xl">👤</div>
+                <h1 className="mt-4 text-2xl font-black">คุณเข้าสู่ระบบแล้ว</h1>
+                <p className="mt-2 text-sm text-gray-500">{user.name}</p>
+                <button onClick={() => go("profile")} className="mt-6 w-full rounded-xl bg-yellow-400 py-3 font-bold">ไปที่โปรไฟล์</button>
+                <button onClick={() => {
+                  setLoggedIn(false);
+                  setNotice("ออกจากระบบแล้ว");
+                }} className="mt-3 w-full rounded-xl border py-3 font-bold text-red-500">ออกจากระบบ</button>
               </div>
             ) : (
-              <div className="space-y-4">
-                {bookings.map((b, i) => (
-                  <div key={i} className="bg-white rounded-3xl p-6 border border-gray-100">
-                    <div className="flex justify-between">
-                      <div>
-                        <p className="font-black text-lg">{b.airline}</p>
-                        <p className="text-xs text-gray-400">{b.code}</p>
-                      </div>
-                      <span className="h-fit bg-green-50 text-green-600 px-3 py-2 rounded-full text-xs font-bold">
-                        บันทึกแล้ว
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center mt-6">
-                      <div>
-                        <p className="text-2xl font-black">{b.departure}</p>
-                        <p className="text-xs text-gray-400">BKK</p>
-                      </div>
-                      <span className="text-red-500">✈ ━━━━━</span>
-                      <div className="text-right">
-                        <p className="text-2xl font-black">{b.arrival}</p>
-                        <p className="text-xs text-gray-400">CNX</p>
-                      </div>
-                    </div>
-                    <p className="text-red-600 font-black mt-5">{money(b.price)} บาท</p>
-                  </div>
-                ))}
-              </div>
+              <>
+                <div className="text-center">
+                  <div className="text-5xl">💻</div>
+                  <h1 className="mt-3 text-2xl font-black">PC Shop Member</h1>
+                  <p className="mt-2 text-sm text-gray-500">สมาชิก PC Shop</p>
+                </div>
+                <div className="mt-6 grid grid-cols-2 rounded-xl bg-gray-100 p-1">
+                  <button onClick={() => setAuthMode("login")} className={`rounded-lg py-3 text-sm font-bold ${authMode === "login" ? "bg-yellow-400 shadow" : ""}`}>เข้าสู่ระบบ</button>
+                  <button onClick={() => setAuthMode("register")} className={`rounded-lg py-3 text-sm font-bold ${authMode === "register" ? "bg-yellow-400 shadow" : ""}`}>สมัครสมาชิก</button>
+                </div>
+                <form onSubmit={submitAuth} className="mt-6 space-y-4">
+                  {authMode === "register" && (
+                    <input className={inputClass} placeholder="ชื่อ - นามสกุล" value={user.name} onChange={e => setUser({...user, name:e.target.value})} />
+                  )}
+                  <input type="email" required className={inputClass} placeholder="อีเมล" value={user.email} onChange={e => setUser({...user, email:e.target.value})} />
+                  {authMode === "register" && (
+                    <input className={inputClass} placeholder="เบอร์โทรศัพท์" value={user.phone} onChange={e => setUser({...user, phone:e.target.value})} />
+                  )}
+                  <input type="password" required className={inputClass} placeholder="รหัสผ่าน" value={password} onChange={e => setPassword(e.target.value)} />
+                  <button type="submit" className="w-full rounded-xl bg-yellow-400 py-4 font-black hover:bg-yellow-500">
+                    {authMode === "login" ? "เข้าสู่ระบบ" : "สมัครสมาชิก"}
+                  </button>
+                </form>
+                <p className="mt-5 text-center text-xs text-gray-400">
+                  ระบบสมาชิกสำหรับทดลองใช้งาน Prototype
+                </p>
+              </>
             )}
           </div>
         )}
 
         {/* PROFILE */}
         {page === "profile" && (
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl font-black mb-7">บัญชีของฉัน</h2>
-            <div className="bg-gradient-to-r from-red-600 to-red-800 rounded-3xl p-8 text-white">
-              <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center text-4xl">
-                ♙
+          <div className="mx-auto max-w-2xl rounded-3xl bg-white p-6 shadow-sm sm:p-8">
+            <h1 className="text-2xl font-black">👤 บัญชีของฉัน</h1>
+            {!loggedIn ? (
+              <div className="py-10 text-center">
+                <p className="text-gray-500">กรุณาเข้าสู่ระบบก่อนใช้งานโปรไฟล์</p>
+                <button onClick={() => go("auth")} className="mt-5 rounded-xl bg-yellow-400 px-7 py-3 font-bold">เข้าสู่ระบบ</button>
               </div>
-              <h3 className="text-2xl font-black mt-4">{user.name || "ผู้ใช้งาน SkyFly"}</h3>
-              <p className="text-white/70 mt-1">{user.email || "ยังไม่ได้เข้าสู่ระบบ"}</p>
-            </div>
-
-            <div className="bg-white rounded-3xl p-7 mt-5 shadow-sm">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="font-black text-xl">ข้อมูลส่วนตัว</h3>
-                <button
-                  onClick={() => {
-                    setForm({ name: user.name, email: user.email, phone: user.phone });
-                    setShowEdit(true);
-                  }}
-                  className="text-red-600 font-bold text-sm"
-                >
-                  ✎ แก้ไขข้อมูล
-                </button>
-              </div>
-              {[
-                ["ชื่อ-นามสกุล", user.name],
-                ["อีเมล", user.email],
-                ["เบอร์โทรศัพท์", user.phone],
-              ].map(([label, value]) => (
-                <div key={label} className="py-4 border-b border-gray-100 flex justify-between gap-4">
-                  <span className="text-gray-400 text-sm">{label}</span>
-                  <span className="font-bold text-sm text-right">{value || "-"}</span>
+            ) : (
+              <>
+                <div className="my-6 flex items-center gap-4 rounded-2xl bg-yellow-50 p-5">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-yellow-300 text-3xl">👤</div>
+                  <div>
+                    <div className="text-lg font-black">{user.name}</div>
+                    <div className="text-sm text-gray-500">{user.email}</div>
+                  </div>
                 </div>
-              ))}
-              <div className="grid grid-cols-2 gap-3 mt-7">
-                <button onClick={() => goTo("bookings")} className="p-4 rounded-xl bg-red-50 text-red-600 font-bold text-sm">
-                  ▤ ประวัติการจอง
-                </button>
-                <button onClick={() => goTo("favorites")} className="p-4 rounded-xl bg-red-50 text-red-600 font-bold text-sm">
-                  ♡ รายการโปรด
-                </button>
+                <div className="mb-4 flex justify-between">
+                  <h2 className="font-black">ข้อมูลส่วนตัว</h2>
+                  <button onClick={() => setEditing(!editing)} className="text-sm font-bold text-yellow-700">{editing ? "ยกเลิก" : "✏️ แก้ไขข้อมูล"}</button>
+                </div>
+                <div className="space-y-4">
+                  <label className="block text-sm font-bold">ชื่อ - นามสกุล
+                    <input disabled={!editing} className={`${inputClass} mt-2 disabled:bg-gray-50`} value={user.name} onChange={e => setUser({...user, name:e.target.value})} />
+                  </label>
+                  <label className="block text-sm font-bold">อีเมล
+                    <input disabled={!editing} className={`${inputClass} mt-2 disabled:bg-gray-50`} value={user.email} onChange={e => setUser({...user, email:e.target.value})} />
+                  </label>
+                  <label className="block text-sm font-bold">เบอร์โทรศัพท์
+                    <input disabled={!editing} className={`${inputClass} mt-2 disabled:bg-gray-50`} value={user.phone} onChange={e => setUser({...user, phone:e.target.value})} />
+                  </label>
+                  <label className="block text-sm font-bold">ที่อยู่จัดส่ง
+                    <textarea disabled={!editing} className={`${inputClass} mt-2 disabled:bg-gray-50`} rows={3} value={user.address} onChange={e => setUser({...user, address:e.target.value})} />
+                  </label>
+                </div>
+                {editing && (
+                  <button onClick={() => {
+                    setEditing(false);
+                    setNotice("บันทึกข้อมูลโปรไฟล์แล้ว");
+                    setTimeout(() => setNotice(""), 1800);
+                  }} className="mt-5 w-full rounded-xl bg-yellow-400 py-3 font-black">💾 บันทึกข้อมูล</button>
+                )}
+                <button onClick={() => go("orders")} className="mt-3 w-full rounded-xl border p-3 font-bold">📦 ประวัติการสั่งซื้อ</button>
+                <button onClick={() => {
+                  setLoggedIn(false);
+                  setPassword("");
+                  go("home");
+                }} className="mt-3 w-full rounded-xl border border-red-200 p-3 font-bold text-red-500">ออกจากระบบ</button>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* CHECKOUT */}
+        {page === "checkout" && (
+          <div className="mx-auto max-w-2xl space-y-5">
+            <h1 className="text-2xl font-black">💳 ชำระเงิน</h1>
+            {!loggedIn ? (
+              <div className="rounded-2xl bg-white p-7 text-center">
+                <p>กรุณาเข้าสู่ระบบก่อนชำระเงิน</p>
+                <button onClick={() => go("auth")} className="mt-4 rounded-xl bg-yellow-400 px-6 py-3 font-bold">เข้าสู่ระบบ</button>
               </div>
-              {registered && (
-                <button
-                  onClick={() => {
-                    if (confirm("ต้องการออกจากระบบหรือไม่?")) {
-                      setRegistered(false);
-                      setUser({ name: "", email: "", phone: "", password: "" });
-                      setForm({ name: "", email: "", phone: "" });
-                      localStorage.removeItem("skyfly-user");
-                      goTo("home");
-                    }
-                  }}
-                  className="mt-7 w-full border border-red-200 text-red-600 p-3 rounded-xl font-bold"
-                >
-                  ออกจากระบบ
-                </button>
-              )}
-            </div>
+            ) : (
+              <>
+                <div className="rounded-2xl bg-white p-5 shadow-sm">
+                  <h2 className="mb-4 font-black">ข้อมูลผู้รับสินค้า</h2>
+                  <p className="text-sm">ชื่อ: {user.name}</p>
+                  <p className="mt-2 text-sm">เบอร์โทร: {user.phone || "ยังไม่ได้ระบุ"}</p>
+                  <p className="mt-2 text-sm">ที่อยู่: {user.address || "ยังไม่ได้ระบุ"}</p>
+                  <button onClick={() => go("profile")} className="mt-4 text-sm font-bold text-yellow-700">แก้ไขข้อมูลผู้รับ →</button>
+                </div>
+                <div className="rounded-2xl bg-white p-5 shadow-sm">
+                  <h2 className="mb-4 font-black">ช่องทางการชำระเงิน</h2>
+                  {["โอนเงินผ่านธนาคาร", "บัตรเครดิต / เดบิต", "เก็บเงินปลายทาง"].map(method => (
+                    <label key={method} className="mb-3 flex cursor-pointer items-center gap-3 rounded-xl border p-4 text-sm">
+                      <input type="radio" name="payment" checked={payment === method} onChange={() => setPayment(method)} />
+                      {method}
+                    </label>
+                  ))}
+                </div>
+                <div className="rounded-2xl bg-white p-5 shadow-sm">
+                  <div className="flex justify-between font-bold">
+                    <span>ยอดรวมสินค้า</span>
+                    <span>{money(total)}</span>
+                  </div>
+                  <div className="mt-3 flex justify-between text-sm">
+                    <span>ค่าจัดส่ง</span>
+                    <span className="text-green-600">ฟรี</span>
+                  </div>
+                  <hr className="my-4" />
+                  <div className="flex justify-between text-xl font-black">
+                    <span>ยอดสุทธิ</span>
+                    <span className="text-red-600">{money(total)}</span>
+                  </div>
+                  <button disabled={cart.length === 0} onClick={checkout} className="mt-6 w-full rounded-xl bg-yellow-400 py-4 font-black disabled:opacity-50">
+                    ยืนยันคำสั่งซื้อ →
+                  </button>
+                  <p className="mt-3 text-center text-xs text-gray-400">การชำระเงินนี้เป็นเพียงการจำลอง Prototype</p>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ORDERS */}
+        {page === "orders" && (
+          <div>
+            <h1 className="mb-5 text-2xl font-black">📦 ประวัติการสั่งซื้อ</h1>
+            {!loggedIn ? (
+              <div className="rounded-2xl bg-white p-10 text-center">
+                <p>กรุณาเข้าสู่ระบบเพื่อดูประวัติการสั่งซื้อ</p>
+                <button onClick={() => go("auth")} className="mt-4 rounded-xl bg-yellow-400 px-6 py-3 font-bold">เข้าสู่ระบบ</button>
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="rounded-2xl bg-white p-12 text-center text-gray-500">
+                <div className="text-5xl">📦</div>
+                <p className="mt-4">ยังไม่มีประวัติการสั่งซื้อ</p>
+                <button onClick={() => go("products")} className="mt-5 rounded-xl bg-yellow-400 px-6 py-3 font-bold">เลือกซื้อสินค้า</button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {orders.map(order => (
+                  <div key={order.id} className="rounded-2xl bg-white p-5 shadow-sm">
+                    <div className="flex flex-wrap justify-between gap-2">
+                      <span className="font-black">คำสั่งซื้อ #{order.id}</span>
+                      <span className="rounded-full bg-yellow-100 px-3 py-1 text-xs font-bold">{order.status}</span>
+                    </div>
+                    <p className="mt-2 text-xs text-gray-500">วันที่สั่งซื้อ: {order.date}</p>
+                    <div className="my-3 space-y-2">
+                      {order.items.map((item: CartItem) => {
+                        const p = products.find(x => x.id === item.productId);
+                        return (
+                          <div key={item.productId} className="flex justify-between text-sm">
+                            <span>{p?.name} × {item.quantity}</span>
+                            <span>{money((p?.price || 0) * item.quantity)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <hr className="my-3" />
+                    <div className="flex justify-between font-black">
+                      <span>ยอดชำระ</span>
+                      <span className="text-red-600">{money(order.total)}</span>
+                    </div>
+                    <p className="mt-2 text-xs text-gray-500">ช่องทางชำระเงิน: {order.payment}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* FOOTER */}
-      <footer className="bg-[#171725] text-white mt-20">
-        <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 sm:grid-cols-3 gap-8">
-          <div>
-            <h2 className="text-3xl font-black text-red-500">✈ SkyFly</h2>
-            <p className="text-gray-400 text-sm mt-3">บินง่าย ไปได้ทุกที่</p>
-          </div>
-          <div>
-            <h3 className="font-bold mb-3">เมนู</h3>
-            <div className="space-y-2 text-sm text-gray-400">
-              <button onClick={() => goTo("home")} className="block">หน้าแรก</button>
-              <button onClick={() => goTo("results")} className="block">จองเที่ยวบิน</button>
-              <button onClick={() => goTo("bookings")} className="block">การจองของฉัน</button>
-            </div>
-          </div>
-          <div>
-            <h3 className="font-bold mb-3">ติดต่อเรา</h3>
-            <p className="text-gray-400 text-sm">Email: support@skyfly.example</p>
-            <p className="text-gray-400 text-sm mt-2">SkyFly Travel Prototype</p>
-          </div>
+      {/* BOTTOM NAVIGATION */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto grid max-w-2xl grid-cols-4 px-2 py-2">
+          {[
+            ["home", "⌂", "หน้าหลัก"],
+            ["products", "▦", "หมวดหมู่"],
+            ["favorites", "♡", "รายการโปรด"],
+            [loggedIn ? "profile" : "auth", "♙", "บัญชีของฉัน"],
+          ].map(([key, icon, label]) => (
+            <button
+              key={key}
+              onClick={() => {
+                if (key === "products") setCategory("ทั้งหมด");
+                go(key);
+              }}
+              className={`flex flex-col items-center gap-1 rounded-xl py-1 text-xs font-bold transition ${
+                page === key
+                  ? "text-yellow-600"
+                  : "text-gray-500"
+              }`}
+            >
+              <span className="text-2xl">{icon}</span>
+              {label}
+              {page === key && <span className="h-1 w-7 rounded-full bg-yellow-400" />}
+            </button>
+          ))}
         </div>
-        <div className="border-t border-white/10 text-center text-xs text-gray-500 py-5">
-          © 2026 SkyFly. Prototype Application.
-        </div>
-      </footer>
+      </nav>
 
-      {/* SIGNUP MODAL */}
-      {showSignup && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-[28px] p-7 w-full max-w-md relative">
-            <button onClick={() => setShowSignup(false)} className="absolute right-5 top-5 text-gray-400 text-xl">✕</button>
-            <div className="text-center mb-6">
-              <div className="text-4xl text-red-600">✈</div>
-              <h2 className="text-2xl font-black mt-3">สมัครสมาชิก SkyFly</h2>
-              <p className="text-sm text-gray-400 mt-2">เริ่มต้นการเดินทางไปกับเรา</p>
-            </div>
-            <div className="space-y-4">
-              <input
-                placeholder="ชื่อ-นามสกุล"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full border rounded-xl p-4 outline-none focus:border-red-500"
-              />
-              <input
-                type="email"
-                placeholder="อีเมล"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="w-full border rounded-xl p-4 outline-none focus:border-red-500"
-              />
-              <input
-                placeholder="เบอร์โทรศัพท์"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="w-full border rounded-xl p-4 outline-none focus:border-red-500"
-              />
-              <input
-                type="password"
-                placeholder="ตั้งรหัสผ่าน"
-                value={user.password}
-                onChange={(e) => setUser({ ...user, password: e.target.value })}
-                className="w-full border rounded-xl p-4 outline-none focus:border-red-500"
-              />
-              <button onClick={register} className="w-full bg-red-600 hover:bg-red-700 text-white rounded-xl p-4 font-black">
-                สมัครสมาชิก
-              </button>
-              <p className="text-xs text-gray-400 text-center">
-                ข้อมูลสมาชิกจะถูกเก็บไว้ในเบราว์เซอร์สำหรับ Prototype
-              </p>
-            </div>
-          </div>
+      {/* NOTIFICATION */}
+      {notice && (
+        <div className="fixed bottom-24 left-1/2 z-[60] -translate-x-1/2 rounded-full bg-gray-900 px-6 py-3 text-sm font-bold text-white shadow-xl">
+          ✓ {notice}
         </div>
       )}
-
-      {/* EDIT PROFILE MODAL */}
-      {showEdit && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-[28px] p-7 w-full max-w-md">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-black">แก้ไขข้อมูลส่วนตัว</h2>
-              <button onClick={() => setShowEdit(false)} className="text-gray-400 text-xl">✕</button>
-            </div>
-            <div className="space-y-4">
-              <label className="block text-sm font-bold">ชื่อ-นามสกุล</label>
-              <input
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full border rounded-xl p-4"
-              />
-              <label className="block text-sm font-bold">อีเมล</label>
-              <input
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="w-full border rounded-xl p-4"
-              />
-              <label className="block text-sm font-bold">เบอร์โทรศัพท์</label>
-              <input
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="w-full border rounded-xl p-4"
-              />
-              <button onClick={updateProfile} className="w-full bg-red-600 text-white rounded-xl p-4 font-black">
-                บันทึกการแก้ไข
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
     </main>
   );
 }
